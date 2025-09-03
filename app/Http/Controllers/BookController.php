@@ -6,6 +6,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use App\Exports\BooksExport;
+use App\Exports\BooksTemplateExport;
 use App\Imports\BooksImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -35,7 +36,7 @@ class BookController extends Controller
                 ->rawColumns(['action'])
                 ->make(true);
         }
-        return view('books.buku', ['title' => 'List Buku']);
+        return view('books.buku', ['title' => 'Book Page']);
     }
     public function create()
     {
@@ -86,6 +87,11 @@ class BookController extends Controller
     public function exportExcel()
     {
         return Excel::download(new BooksExport, 'books.xlsx');
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new BooksTemplateExport, 'template_import_buku.xlsx');
     }
 
     public function exportPdf()

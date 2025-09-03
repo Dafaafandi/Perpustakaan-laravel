@@ -3,17 +3,17 @@
         <div class="flex h-16 items-center justify-between">
             <div class="flex items-center">
                 <div class="shrink-0">
-                    <img src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
+                    <img src="https://iconape.com/wp-content/png_logo_vector/kabupaten-lamongan-logo.png"
                         alt="Your Company" class="size-8" />
                 </div>
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
                         <!-- Current: "bg-gray-950/50 text-white", Default: "text-gray-300 hover:bg-white/5 hover:text-white" -->
                         <x-nav-link href="/" :active="request()->is('/')">Home</x-nav-link>
-                        <x-nav-link href="/kategori" :active="request()->is('kategori')">List Kategori</x-nav-link>
-                        <x-nav-link href="/buku" :active="request()->is('buku')">List Buku</x-nav-link>
-                        <x-nav-link href="/peminjaman" :active="request()->is('peminjaman')">List Peminjaman</x-nav-link>
-                        <x-nav-link href="/daftar" :active="request()->is('daftar')">Daftar Member</x-nav-link>
+                        <x-nav-link href="/kategori" :active="request()->is('kategori')">List Category</x-nav-link>
+                        <x-nav-link href="/buku" :active="request()->is('buku')">List Book</x-nav-link>
+                        <x-nav-link href="/peminjaman" :active="request()->is('peminjaman')">List Borrowing</x-nav-link>
+                        <x-nav-link href="/daftar" :active="request()->is('daftar')">Member List</x-nav-link>
                     </div>
                 </div>
             </div>
@@ -46,8 +46,6 @@
 
                                 <a href="/profile"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-                                <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
 
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
@@ -127,8 +125,6 @@
             <div class="mt-3 space-y-1 px-2">
                 <a href="/profile"
                     class="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-white/5 hover:text-white">Profile</a>
-                <a href="#"
-                    class="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-white/5 hover:text-white">Settings</a>
                 <a href="/login" class="block px-4 py-2 text-sm text-gray-300 hover:bg-white/5">Sign in</a>
                 <a href="/logout" class="block px-4 py-2 text-sm text-gray-300 hover:bg-white/5">Sign out</a>
             </div>

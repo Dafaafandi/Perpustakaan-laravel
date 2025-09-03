@@ -1,5 +1,5 @@
 <x-layout>
-    <x-slot:title>Halaman Kategori Buku</x-slot:title>
+    <x-slot:title>Category Book Page</x-slot:title>
 
     @push('styles')
         <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css" rel="stylesheet">

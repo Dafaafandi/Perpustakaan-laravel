@@ -4,6 +4,7 @@
     @push('styles')
         <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.datatables.net/1.11.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     @endpush
 
     <div class="container">
@@ -85,8 +86,6 @@
                 <a href="{{ route('buku.index') }}" class="btn btn-secondary">Batal</a>
             </form>
         @else
-            <h1>{{ $title }}</h1>
-
             @if (session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
@@ -109,32 +108,68 @@
 
             <div class="card mb-4">
                 <div class="card-body">
-                    <form action="{{ route('books.import.excel') }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        <div class="form-group mb-3">
-                            <label for="file">Import File Excel</label>
-                            <input type="file" name="file" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn btn-info">Import</button>
-                    </form>
-                </div>
-            </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Import Data Buku dari Excel</h5>
+                            <p class="text-muted">Download template terlebih dahulu, isi data, lalu upload file Excel.
+                            </p>
 
-            <table class="table table-bordered data-table">
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Judul</th>
-                        <th>Penulis</th>
-                        <th>Kategori</th>
-                        <th>Tahun</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle"></i> Kategori yang Tersedia:</h6>
+                                <div class="row">
+                                    @forelse(App\Models\Category::orderBy('id')->get() as $category)
+                                        <div class="col-md-6">
+                                            <small><strong>{{ $category->id }}</strong> =
+                                                {{ $category->name }}</small>
+                                        </div>
+                                        @if ($loop->iteration % 2 == 0)
+                                </div>
+                                <div class="row">
         @endif
+    @empty
+        <div class="col-12">
+            <small class="text-warning">Belum ada kategori. Silakan tambah kategori terlebih dahulu.</small>
+        </div>
+        @endforelse
+    </div>
+    </div>
+
+    <a href="{{ route('books.template.download') }}" class="btn btn-outline-primary mb-3">
+        <i class="fas fa-download"></i> Download
+    </a>
+    </div>
+    <div class="col-md-6">
+        <form action="{{ route('books.import.excel') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            <div class="form-group mb-3">
+                <label for="file">Pilih File Excel untuk Import</label>
+                <input type="file" name="file" class="form-control" accept=".xlsx,.xls" required>
+                <small class="form-text text-muted">Format yang didukung: .xlsx, .xls</small>
+            </div>
+            <button type="submit" class="btn btn-info">
+                <i class="fas fa-upload"></i> Import Data
+            </button>
+        </form>
+    </div>
+    </div>
+    </div>
+    </div>
+
+    <table class="table table-bordered data-table">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Judul</th>
+                <th>Penulis</th>
+                <th>Kategori</th>
+                <th>Tahun</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    @endif
     </div>
 
     @push('scripts')

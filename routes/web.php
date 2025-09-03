@@ -16,11 +16,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/buku', [BookController::class, 'index'])->name('buku.index');
 
     Route::get('/peminjaman', function () {
-        return view('peminjaman', ['title' => 'Peminjaman Page']);
+        return view('peminjaman', ['title' => 'Borrowing Page']);
     });
 
     Route::get('/daftar', function () {
-        return view('daftar', ['title' => 'Daftar Member Page']);
+        return view('daftar', ['title' => 'Member List Page']);
     });
 
     Route::get('/dashboard', function () {
@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('books/export/excel', [BookController::class, 'exportExcel'])->name('books.export.excel');
     Route::get('books/export/pdf', [BookController::class, 'exportPdf'])->name('books.export.pdf');
+    Route::get('books/template/download', [BookController::class, 'downloadTemplate'])->name('books.template.download');
     Route::post('books/import/excel', [BookController::class, 'importExcel'])->name('books.import.excel');
 
     Route::resource('books', BookController::class);
