@@ -3,61 +3,124 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 use Yajra\DataTables\Facades\DataTables;
 
 class CategoryController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of categories.
      */
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Category::latest()->get();
-            return DataTables::of($data)
+            $categories = Category::withCount('books')->latest()->get();
+
+            return DataTables::of($categories)
                 ->addIndexColumn()
+                ->addColumn('books_count', function ($row) {
+                    return $row->books_count . ' buku';
+                })
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="javascript:void(0)" data-toggle="tooltip"  data-id="' . $row->id . '" data-original-title="Edit" class="edit btn btn-primary btn-sm editCategory">Edit</a>';
-                    $btn = $btn . ' <a href="javascript:void(0)" data-toggle="tooltip"  data-id="' . $row->id . '" data-original-title="Delete" class="btn btn-danger btn-sm deleteCategory">Delete</a>';
-                    return $btn;
+                    return $this->getActionButtons($row);
                 })
                 ->rawColumns(['action'])
                 ->make(true);
         }
 
-        return view('kategori', ['title' => 'Kategori Page']);
+        return view('admin.kategori', [
+            'title' => 'Category Management'
+        ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created category in storage.
      */
     public function store(Request $request)
     {
-        Category::updateOrCreate(
-            ['id' => $request->category_id],
-            ['name' => $request->name]
-        );
+        $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name,' . $request->category_id
+        ]);
 
-        return response()->json(['success' => 'Category saved successfully.']);
+        try {
+            Category::updateOrCreate(
+                ['id' => $request->category_id],
+                ['name' => $request->name]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Kategori berhasil disimpan.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan kategori: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Show the form for editing the specified category.
      */
-    public function edit($id)
+    public function edit(int $id)
     {
-        $category = Category::find($id);
+        $category = Category::findOrFail($id);
+
         return response()->json($category);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified category from storage.
      */
-    public function destroy($id)
+    public function destroy(int $id)
     {
-        Category::find($id)->delete();
+        try {
+            $category = Category::findOrFail($id);
 
-        return response()->json(['success' => 'Category deleted successfully.']);
+            if ($category->books()->count() > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kategori tidak dapat dihapus karena masih memiliki buku.'
+                ], 400);
+            }
+
+            $category->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Kategori berhasil dihapus.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus kategori: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate action buttons for DataTable.
+     */
+    private function getActionButtons($category): string
+    {
+        return '
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-primary editCategory"
+                        data-id="' . $category->id . '"
+                        data-toggle="tooltip"
+                        title="Edit kategori">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button type="button" class="btn btn-sm btn-danger deleteCategory"
+                        data-id="' . $category->id . '"
+                        data-toggle="tooltip"
+                        title="Hapus kategori">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        ';
     }
 }

@@ -9,9 +9,10 @@
         </p>
     </header>
 
-    <form id="send-verification" method="post" action="{{ route('verification.send') }}">
+    {{-- Email verification disabled --}}
+    {{-- <form id="send-verification" method="post" action="{{ route('verification.send') }}">
         @csrf
-    </form>
+    </form> --}}
 
     <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6" enctype="multipart/form-data">
         @csrf
@@ -49,6 +50,7 @@
                 required autocomplete="username" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
 
+            {{-- Email verification disabled
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && !$user->hasVerifiedEmail())
                 <div>
                     <p class="text-sm mt-2 text-gray-800">
@@ -67,6 +69,7 @@
                     @endif
                 </div>
             @endif
+            --}}
         </div>
 
         <div class="flex items-center gap-4">

@@ -33,9 +33,10 @@ class ProfileController extends Controller
             $user->image = $imagePath;
         }
 
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
+        // Email verification disabled
+        // if ($user->isDirty('email')) {
+        //     $user->email_verified_at = null;
+        // }
 
         $user->save();
 

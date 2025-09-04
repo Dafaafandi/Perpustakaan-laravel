@@ -1,46 +1,62 @@
 <?php
 
+use App\Http\Controllers\BookController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\BookController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
+
+Route::get('/welcome', function () {
+    return view('welcome');
+})->name('welcome');
 
 Route::middleware('auth')->group(function () {
 
     Route::get('/', function () {
-        return view('home', ['title' => 'Home Page']);
+        if (auth()->user()->hasRole('admin')) {
+            return view('admin.home', ['title' => 'Admin Dashboard']);
+        } else {
+            return view('member.home', ['title' => 'Member Dashboard']);
+        }
     })->name('home');
 
-    Route::resource('kategori', CategoryController::class)->middleware('role:admin');
-
-    Route::get('/buku', [BookController::class, 'index'])->name('buku.index');
-
-    Route::get('/peminjaman', function () {
-        return view('peminjaman', ['title' => 'Borrowing Page']);
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+        Route::patch('/', [ProfileController::class, 'update'])->name('update');
+        Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
     });
 
-    Route::get('/daftar', function () {
-        return view('daftar', ['title' => 'Member List Page']);
+    Route::middleware('role:admin')->group(function () {
+        Route::resource('kategori', CategoryController::class);
+
+        Route::prefix('books')->name('books.')->group(function () {
+            Route::get('export/excel', [BookController::class, 'exportExcel'])->name('export.excel');
+            Route::get('export/pdf', [BookController::class, 'exportPdf'])->name('export.pdf');
+            Route::get('template/download', [BookController::class, 'downloadTemplate'])->name('template.download');
+            Route::post('import/excel', [BookController::class, 'importExcel'])->name('import.excel');
+        });
+
+        Route::resource('books', BookController::class);
+        Route::get('/buku', [BookController::class, 'index'])->name('buku.index');
+
+        Route::get('/peminjaman', function () {
+            return view('borrowing.peminjaman', ['title' => 'Borrowing Page']);
+        })->name('peminjaman');
+
+        Route::get('/daftar', function () {
+            return view('admin.daftar', ['title' => 'Member List Page']);
+        })->name('daftar');
     });
-
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->middleware('verified')->name('dashboard');
-
-    Route::get('/admin-panel', function () {
-        return 'Ini adalah halaman khusus Admin!';
-    })->middleware('role:admin');
-
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    Route::get('books/export/excel', [BookController::class, 'exportExcel'])->name('books.export.excel');
-    Route::get('books/export/pdf', [BookController::class, 'exportPdf'])->name('books.export.pdf');
-    Route::get('books/template/download', [BookController::class, 'downloadTemplate'])->name('books.template.download');
-    Route::post('books/import/excel', [BookController::class, 'importExcel'])->name('books.import.excel');
-
-    Route::resource('books', BookController::class);
 });
 
 require __DIR__ . '/auth.php';

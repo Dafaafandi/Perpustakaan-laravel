@@ -5,15 +5,92 @@
         <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.datatables.net/1.11.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+        <style>
+            .book-image-container {
+                width: 60px !important;
+                height: 80px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background-color: #f8f9fa !important;
+                border-radius: 6px !important;
+                overflow: hidden !important;
+                border: 1px solid #dee2e6 !important;
+            }
+
+            .book-image {
+                max-width: 100% !important;
+                max-height: 100% !important;
+                object-fit: contain !important;
+                border-radius: 4px !important;
+            }
+
+            .no-image-placeholder {
+                width: 60px !important;
+                height: 80px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background-color: #e9ecef !important;
+                border-radius: 6px !important;
+                border: 1px solid #dee2e6 !important;
+            }
+
+            .data-table td:nth-child(2) {
+                width: 80px !important;
+                text-align: center !important;
+                vertical-align: middle !important;
+            }
+
+            .book-preview-container {
+                width: 150px !important;
+                height: 200px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background-color: #f8f9fa !important;
+                border-radius: 8px !important;
+                overflow: hidden !important;
+                border: 1px solid #dee2e6 !important;
+            }
+
+            .book-preview-image {
+                max-width: 100% !important;
+                max-height: 100% !important;
+                object-fit: contain !important;
+                border-radius: 6px !important;
+            }
+        </style>
     @endpush
 
     <div class="container">
 
         @if (isset($book))
             <h2>Edit Buku</h2>
-            <form action="{{ route('books.update', $book->id) }}" method="POST">
+            <form action="{{ route('books.update', $book->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
+
+                @if ($book->image)
+                    <div class="form-group mb-3">
+                        <label>Gambar Saat Ini</label>
+                        <div class="mt-2">
+                            <div class="book-preview-container">
+                                <img src="{{ asset('storage/' . $book->image) }}" alt="Book Image"
+                                    class="book-preview-image">
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="form-group mb-3">
+                    <label>Upload Gambar Buku</label>
+                    <input type="file" name="image" class="form-control" accept="image/*">
+                    <small class="form-text text-muted">Upload gambar buku (JPG, PNG, GIF - Max: 2MB). Kosongkan jika
+                        tidak ingin mengubah gambar.</small>
+                </div>
+
                 <div class="form-group mb-3">
                     <label>Judul</label>
                     <input type="text" name="title" class="form-control" value="{{ old('title', $book->title) }}"
@@ -55,8 +132,15 @@
                     </ul>
                 </div>
             @endif
-            <form action="{{ route('books.store') }}" method="POST">
+            <form action="{{ route('books.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
+
+                <div class="form-group mb-3">
+                    <label>Upload Gambar Buku</label>
+                    <input type="file" name="image" class="form-control" accept="image/*">
+                    <small class="form-text text-muted">Upload gambar buku (JPG, PNG, GIF - Max: 2MB)</small>
+                </div>
+
                 <div class="form-group mb-3">
                     <label>Judul</label>
                     <input type="text" name="title" class="form-control" value="{{ old('title') }}" required>
@@ -159,6 +243,7 @@
         <thead>
             <tr>
                 <th>No</th>
+                <th>Gambar</th>
                 <th>Judul</th>
                 <th>Penulis</th>
                 <th>Kategori</th>
@@ -189,6 +274,12 @@
                         columns: [{
                                 data: 'DT_RowIndex',
                                 name: 'DT_RowIndex',
+                                orderable: false,
+                                searchable: false
+                            },
+                            {
+                                data: 'image',
+                                name: 'image',
                                 orderable: false,
                                 searchable: false
                             },

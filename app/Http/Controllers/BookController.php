@@ -1,110 +1,228 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\Models\Book;
-use App\Models\Category;
-use Illuminate\Http\Request;
-use Yajra\DataTables\Facades\DataTables;
 use App\Exports\BooksExport;
 use App\Exports\BooksTemplateExport;
 use App\Imports\BooksImport;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\Book;
+use App\Models\Category;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Yajra\DataTables\Facades\DataTables;
 
 class BookController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Display a listing of the books.
+     */
+    public function index(Request $request): View|JsonResponse
     {
         if ($request->ajax()) {
-            $data = Book::with('category')->latest()->get();
-            return DataTables::of($data)
+            $books = Book::with('category')->latest()->get();
+
+            return DataTables::of($books)
                 ->addIndexColumn()
                 ->addColumn('category', function ($row) {
-                    return $row->category ? $row->category->name : 'N/A';
+                    return $row->category?->name ?? 'N/A';
+                })
+                ->addColumn('image', function ($row) {
+                    if ($row->image) {
+                        return '<div style="width: 60px; height: 80px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa; border-radius: 4px; overflow: hidden;">
+                                    <img src="' . asset('storage/' . $row->image) . '" alt="Book Image"
+                                         style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px;">
+                                </div>';
+                    }
+                    return '<div style="width: 60px; height: 80px; display: flex; align-items: center; justify-content: center; background-color: #e9ecef; border-radius: 4px;">
+                                <span class="badge bg-secondary" style="font-size: 10px;">No Image</span>
+                            </div>';
                 })
                 ->addColumn('action', function ($row) {
-                    $editUrl = route('books.edit', $row->id);
-                    $deleteUrl = route('books.destroy', $row->id);
-                    $actionBtn = '<a href="' . $editUrl . '" class="edit btn btn-success btn-sm">Edit</a>
-                                  <form action="' . $deleteUrl . '" method="POST" style="display:inline-block;">
-                                      ' . csrf_field() . '
-                                      ' . method_field('DELETE') . '
-                                      <button type="submit" class="delete btn btn-danger btn-sm" onclick="return confirm(\'Yakin ingin menghapus?\')">Delete</button>
-                                  </form>';
-                    return $actionBtn;
+                    return $this->getActionButtons($row);
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['action', 'image'])
                 ->make(true);
         }
-        return view('books.buku', ['title' => 'Book Page']);
+
+        return view('books.buku', [
+            'title' => 'Book Management'
+        ]);
     }
-    public function create()
+
+    /**
+     * Show the form for creating a new book.
+     */
+    public function create(): View
     {
         $categories = Category::all();
-        return view('books.buku', ['title' => 'Tambah Buku', 'categories' => $categories]);
-    }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'publication_year' => 'required|digits:4|integer|min:1900|max:' . (date('Y')),
+        return view('books.buku', [
+            'title' => 'Tambah Buku',
+            'categories' => $categories
         ]);
-
-        Book::create($request->all());
-
-        return redirect()->route('books.index')->with('success', 'Buku berhasil ditambahkan.');
     }
 
-    public function edit(Book $book)
+    /**
+     * Store a newly created book in storage.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validatedData = $this->validateBookData($request);
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('book-images', 'public');
+            $validatedData['image'] = $imagePath;
+        }
+
+        Book::create($validatedData);
+
+        return redirect()
+            ->route('books.index')
+            ->with('success', 'Buku berhasil ditambahkan.');
+    }
+
+    /**
+     * Show the form for editing the specified book.
+     */
+    public function edit(Book $book): View
     {
         $categories = Category::all();
-        return view('books.buku', ['title' => 'Edit Buku', 'book' => $book, 'categories' => $categories]);
-    }
 
-    public function update(Request $request, Book $book)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'publication_year' => 'required|digits:4|integer|min:1900|max:' . (date('Y')),
+        return view('books.buku', [
+            'title' => 'Edit Buku',
+            'book' => $book,
+            'categories' => $categories
         ]);
-
-        $book->update($request->all());
-
-        return redirect()->route('books.index')->with('success', 'Buku berhasil diperbarui.');
     }
 
-    public function destroy(Book $book)
+    /**
+     * Update the specified book in storage.
+     */
+    public function update(Request $request, Book $book): RedirectResponse
     {
+        $validatedData = $this->validateBookData($request);
+
+        if ($request->hasFile('image')) {
+            if ($book->image) {
+                Storage::disk('public')->delete($book->image);
+            }
+            $imagePath = $request->file('image')->store('book-images', 'public');
+            $validatedData['image'] = $imagePath;
+        }
+
+        $book->update($validatedData);
+
+        return redirect()
+            ->route('books.index')
+            ->with('success', 'Buku berhasil diperbarui.');
+    }
+
+    /**
+     * Remove the specified book from storage.
+     */
+    public function destroy(Book $book): RedirectResponse
+    {
+        if ($book->image) {
+            Storage::disk('public')->delete($book->image);
+        }
+
         $book->delete();
-        return redirect()->route('books.index')->with('success', 'Buku berhasil dihapus.');
+
+        return redirect()
+            ->route('books.index')
+            ->with('success', 'Buku berhasil dihapus.');
     }
 
+    /**
+     * Export books to Excel.
+     */
     public function exportExcel()
     {
-        return Excel::download(new BooksExport, 'books.xlsx');
+        return Excel::download(new BooksExport, 'books-' . date('Y-m-d') . '.xlsx');
     }
 
+    /**
+     * Download template for importing books.
+     */
     public function downloadTemplate()
     {
-        return Excel::download(new BooksTemplateExport, 'template_import_buku.xlsx');
+        return Excel::download(new BooksTemplateExport, 'template-import-buku.xlsx');
     }
 
+    /**
+     * Export books to PDF.
+     */
     public function exportPdf()
     {
         $books = Book::with('category')->get();
         $pdf = Pdf::loadView('books.pdf', ['books' => $books]);
-        return $pdf->download('books.pdf');
+
+        return $pdf->download('books-' . date('Y-m-d') . '.pdf');
     }
 
-    public function importExcel(Request $request)
+    /**
+     * Import books from Excel.
+     */
+    public function importExcel(Request $request): RedirectResponse
     {
-        $request->validate(['file' => 'required|mimes:xlsx,xls']);
-        Excel::import(new BooksImport, $request->file('file'));
-        return redirect()->route('books.index')->with('success', 'Data buku berhasil diimpor.');
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls|max:2048'
+        ]);
+
+        try {
+            Excel::import(new BooksImport, $request->file('file'));
+
+            return redirect()
+                ->route('books.index')
+                ->with('success', 'Data buku berhasil diimpor.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('books.index')
+                ->with('error', 'Gagal mengimpor data: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Validate book data.
+     */
+    private function validateBookData(Request $request): array
+    {
+        return $request->validate([
+            'title' => 'required|string|max:255',
+            'author' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'publication_year' => 'required|digits:4|integer|min:1900|max:' . date('Y'),
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+    }
+
+    /**
+     * Generate action buttons for DataTable.
+     */
+    private function getActionButtons($book): string
+    {
+        $editUrl = route('books.edit', $book->id);
+        $deleteUrl = route('books.destroy', $book->id);
+
+        return '
+            <div class="btn-group" role="group">
+                <a href="' . $editUrl . '" class="btn btn-sm btn-success">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <form action="' . $deleteUrl . '" method="POST" style="display:inline-block;">
+                    ' . csrf_field() . '
+                    ' . method_field('DELETE') . '
+                    <button type="submit" class="btn btn-sm btn-danger"
+                            onclick="return confirm(\'Yakin ingin menghapus buku ini?\')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        ';
     }
 }
