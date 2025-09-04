@@ -45,7 +45,7 @@
                                     <p class="text-gray-500 truncate">{{ auth()->user()->email }}</p>
                                 </div>
 
-                                <a href="/profile"
+                                <a href="{{ route('profile.edit') }}"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
 
                                 <form method="POST" action="{{ route('logout') }}">
@@ -131,7 +131,7 @@
                 </div>
                 <div class="mt-3 space-y-1 px-2">
                     @auth
-                        <a href="/profile"
+                        <a href="{{ route('profile.edit') }}"
                             class="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-100">Profile</a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
