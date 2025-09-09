@@ -30,7 +30,7 @@ class CategoryController extends Controller
                 ->make(true);
         }
 
-        return view('admin.kategori', [
+        return view('admin.category.kategori', [
             'title' => 'Category Management'
         ]);
     }

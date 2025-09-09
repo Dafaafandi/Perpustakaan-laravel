@@ -49,7 +49,7 @@ class BookController extends Controller
                 ->make(true);
         }
 
-        return view('books.buku', [
+        return view('admin.books.buku', [
             'title' => 'Book Management'
         ]);
     }
@@ -61,7 +61,7 @@ class BookController extends Controller
     {
         $categories = Category::all();
 
-        return view('books.buku', [
+        return view('admin.books.buku', [
             'title' => 'Tambah Buku',
             'categories' => $categories
         ]);
@@ -82,7 +82,7 @@ class BookController extends Controller
         Book::create($validatedData);
 
         return redirect()
-            ->route('books.index')
+            ->route('admin.books.index')
             ->with('success', 'Buku berhasil ditambahkan.');
     }
 
@@ -93,7 +93,7 @@ class BookController extends Controller
     {
         $categories = Category::all();
 
-        return view('books.buku', [
+        return view('admin.books.buku', [
             'title' => 'Edit Buku',
             'book' => $book,
             'categories' => $categories
@@ -118,14 +118,14 @@ class BookController extends Controller
         $book->update($validatedData);
 
         return redirect()
-            ->route('books.index')
+            ->route('admin.books.index')
             ->with('success', 'Buku berhasil diperbarui.');
     }
 
     /**
      * Remove the specified book from storage.
      */
-    public function destroy(Book $book): RedirectResponse
+    public function destroy(Book $book): RedirectResponse|JsonResponse
     {
         if ($book->image) {
             Storage::disk('public')->delete($book->image);
@@ -133,8 +133,16 @@ class BookController extends Controller
 
         $book->delete();
 
+        // Check if request is Ajax
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Buku berhasil dihapus.'
+            ]);
+        }
+
         return redirect()
-            ->route('books.index')
+            ->route('admin.books.index')
             ->with('success', 'Buku berhasil dihapus.');
     }
 
@@ -160,7 +168,7 @@ class BookController extends Controller
     public function exportPdf()
     {
         $books = Book::with('category')->get();
-        $pdf = Pdf::loadView('books.pdf', ['books' => $books]);
+        $pdf = Pdf::loadView('admin.books.pdf', ['books' => $books]);
 
         return $pdf->download('books-' . date('Y-m-d') . '.pdf');
     }
@@ -178,11 +186,11 @@ class BookController extends Controller
             Excel::import(new BooksImport, $request->file('file'));
 
             return redirect()
-                ->route('books.index')
+                ->route('admin.books.index')
                 ->with('success', 'Data buku berhasil diimpor.');
         } catch (\Exception $e) {
             return redirect()
-                ->route('books.index')
+                ->route('admin.books.index')
                 ->with('error', 'Gagal mengimpor data: ' . $e->getMessage());
         }
     }
@@ -202,26 +210,38 @@ class BookController extends Controller
     }
 
     /**
+     * Display the specified book.
+     */
+    public function show(Book $book): View
+    {
+        return view('admin.books.show', [
+            'book' => $book->load('category'),
+            'title' => 'Detail Buku: ' . $book->title
+        ]);
+    }
+
+    /**
      * Generate action buttons for DataTable.
      */
     private function getActionButtons($book): string
     {
-        $editUrl = route('books.edit', $book->id);
-        $deleteUrl = route('books.destroy', $book->id);
+        $detailUrl = route('admin.books.show', $book->id);
+        $editUrl = route('admin.books.edit', $book->id);
+        $deleteUrl = route('admin.books.destroy', $book->id);
 
         return '
             <div class="btn-group" role="group">
+                <a href="' . $detailUrl . '" class="btn btn-info">
+                    <i class="fa-solid fa-info"></i> Detail
+                </a>
                 <a href="' . $editUrl . '" class="btn btn-sm btn-success">
                     <i class="fas fa-edit"></i> Edit
                 </a>
-                <form action="' . $deleteUrl . '" method="POST" style="display:inline-block;">
-                    ' . csrf_field() . '
-                    ' . method_field('DELETE') . '
-                    <button type="submit" class="btn btn-sm btn-danger"
-                            onclick="return confirm(\'Yakin ingin menghapus buku ini?\')">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </form>
+                <button type="button" class="btn btn-sm btn-danger delete-btn"
+                        data-url="' . $deleteUrl . '"
+                        data-title="' . htmlspecialchars($book->title) . '">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
             </div>
         ';
     }

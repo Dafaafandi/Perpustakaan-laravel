@@ -7,6 +7,19 @@
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
         <style>
+            /* Override background untuk konsistensi */
+            body {
+                background-color: #ffffff !important;
+            }
+
+            .min-h-full {
+                background-color: #ffffff !important;
+            }
+
+            main {
+                background-color: #ffffff !important;
+            }
+
             .book-image-container {
                 width: 60px !important;
                 height: 80px !important;
@@ -61,6 +74,41 @@
                 object-fit: contain !important;
                 border-radius: 6px !important;
             }
+
+            .delete-btn:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+
+            .alert {
+                animation: slideInDown 0.3s ease-in-out;
+            }
+
+            @keyframes slideInDown {
+                from {
+                    transform: translate3d(0, -100%, 0);
+                    visibility: visible;
+                }
+
+                to {
+                    transform: translate3d(0, 0, 0);
+                }
+            }
+
+            .dataTables_wrapper {
+                background-color: #ffffff !important;
+            }
+
+            .table {
+                background-color: #ffffff !important;
+            }
+
+            .container {
+                background-color: #ffffff !important;
+                border-radius: 0.5rem;
+                padding: 1.5rem;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            }
         </style>
     @endpush
 
@@ -68,7 +116,7 @@
 
         @if (isset($book))
             <h2>Edit Buku</h2>
-            <form action="{{ route('books.update', $book->id) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.books.update', $book->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -132,7 +180,7 @@
                     </ul>
                 </div>
             @endif
-            <form action="{{ route('books.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.books.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 <div class="form-group mb-3">
@@ -185,9 +233,9 @@
             @endif
 
             <div class="mb-3">
-                <a href="{{ route('books.create') }}" class="btn btn-primary">Tambah Buku</a>
-                <a href="{{ route('books.export.excel') }}" class="btn btn-success">Export Excel</a>
-                <a href="{{ route('books.export.pdf') }}" class="btn btn-danger">Export PDF</a>
+                <a href="{{ route('admin.books.create') }}" class="btn btn-primary">Tambah Buku</a>
+                <a href="{{ route('admin.books.export.excel') }}" class="btn btn-success">Export Excel</a>
+                <a href="{{ route('admin.books.export.pdf') }}" class="btn btn-danger">Export PDF</a>
             </div>
 
             <div class="card mb-4">
@@ -218,12 +266,12 @@
     </div>
     </div>
 
-    <a href="{{ route('books.template.download') }}" class="btn btn-outline-primary mb-3">
+    <a href="{{ route('admin.books.template.download') }}" class="btn btn-outline-primary mb-3">
         <i class="fas fa-download"></i> Download
     </a>
     </div>
     <div class="col-md-6">
-        <form action="{{ route('books.import.excel') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.books.import.excel') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="form-group mb-3">
                 <label for="file">Pilih File Excel untuk Import</label>
@@ -307,6 +355,58 @@
                             },
                         ]
                     });
+
+                    $(document).on('click', '.delete-btn', function(e) {
+                        e.preventDefault();
+
+                        const deleteUrl = $(this).data('url');
+                        const bookTitle = $(this).data('title');
+
+                        if (confirm(`Yakin ingin menghapus buku "${bookTitle}"?`)) {
+                            $(this).prop('disabled', true).html(
+                                '<i class="fas fa-spinner fa-spin"></i> Deleting...');
+
+                            $.ajax({
+                                url: deleteUrl,
+                                type: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        showAlert('success', response.message);
+
+                                        table.ajax.reload(null, false);
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    showAlert('danger', 'Gagal menghapus buku: ' + error);
+
+                                    $(this).prop('disabled', false).html(
+                                        '<i class="fas fa-trash"></i> Delete');
+                                }
+                            });
+                        }
+                    });
+
+                    function showAlert(type, message) {
+                        const alertHtml = `
+                            <div class="alert alert-${type} alert-dismissible fade show" role="alert" id="ajax-alert">
+                                <strong>${type === 'success' ? 'Berhasil!' : 'Error!'}</strong> ${message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+
+                        $('#ajax-alert').remove();
+
+                        $('.container').prepend(alertHtml);
+
+                        setTimeout(function() {
+                            $('#ajax-alert').fadeOut('slow', function() {
+                                $(this).remove();
+                            });
+                        }, 5000);
+                    }
                 });
             </script>
         @endif

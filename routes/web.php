@@ -37,24 +37,37 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('role:admin')->group(function () {
+        // Kategori routes
         Route::resource('kategori', CategoryController::class);
 
-        Route::prefix('books')->name('books.')->group(function () {
+        // Book-related routes
+        Route::prefix('books')->name('admin.books.')->group(function () {
+            // Explicitly define show route first to avoid conflicts
+            Route::get('{book}', [BookController::class, 'show'])->name('show');
+
+            // Other CRUD routes
+            Route::get('/', [BookController::class, 'index'])->name('index');
+            Route::get('/create', [BookController::class, 'create'])->name('create');
+            Route::post('/', [BookController::class, 'store'])->name('store');
+            Route::get('{book}/edit', [BookController::class, 'edit'])->name('edit');
+            Route::put('{book}', [BookController::class, 'update'])->name('update');
+            Route::delete('{book}', [BookController::class, 'destroy'])->name('destroy');
+
+            // Additional book-related routes
             Route::get('export/excel', [BookController::class, 'exportExcel'])->name('export.excel');
             Route::get('export/pdf', [BookController::class, 'exportPdf'])->name('export.pdf');
             Route::get('template/download', [BookController::class, 'downloadTemplate'])->name('template.download');
             Route::post('import/excel', [BookController::class, 'importExcel'])->name('import.excel');
         });
 
-        Route::resource('books', BookController::class);
         Route::get('/buku', [BookController::class, 'index'])->name('buku.index');
 
         Route::get('/peminjaman', function () {
-            return view('borrowing.peminjaman', ['title' => 'Borrowing Page']);
+            return view('admin.borrowing.peminjaman', ['title' => 'Borrowing Page']);
         })->name('peminjaman');
 
         Route::get('/daftar', function () {
-            return view('admin.daftar', ['title' => 'Member List Page']);
+            return view('admin.members.daftar', ['title' => 'Member List Page']);
         })->name('daftar');
     });
 });
