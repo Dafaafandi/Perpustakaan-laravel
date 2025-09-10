@@ -1,6 +1,26 @@
 <x-layout>
     <x-slot:title>{{ $title }}</x-slot:title>
 
+    @push('styles')
+        <style>
+            .group a {
+                text-decoration: none !important;
+            }
+
+            .group a:hover {
+                text-decoration: none !important;
+            }
+
+            .group h3 {
+                text-decoration: none !important;
+            }
+
+            .group p {
+                text-decoration: none !important;
+            }
+        </style>
+    @endpush
+
     <div class="bg-white">
         <div class="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:px-8">
             <!-- Header -->
@@ -56,7 +76,7 @@
 
                 <!-- Borrowing Card -->
                 <div class="group relative">
-                    <a href="/peminjaman"
+                    <a href="/borrowing"
                         class="block rounded-lg bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
                         <div class="p-6 text-center">
                             <div
@@ -76,7 +96,7 @@
 
                 <!-- Members Card -->
                 <div class="group relative">
-                    <a href="/daftar"
+                    <a href="/members"
                         class="block rounded-lg bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
                         <div class="p-6 text-center">
                             <div

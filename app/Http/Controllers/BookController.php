@@ -61,7 +61,7 @@ class BookController extends Controller
     {
         $categories = Category::all();
 
-        return view('admin.books.buku', [
+        return view('admin.books.create', [
             'title' => 'Tambah Buku',
             'categories' => $categories
         ]);
@@ -79,6 +79,9 @@ class BookController extends Controller
             $validatedData['image'] = $imagePath;
         }
 
+        // Set available_stock equal to stock initially
+        $validatedData['available_stock'] = $validatedData['stock'];
+
         Book::create($validatedData);
 
         return redirect()
@@ -93,7 +96,7 @@ class BookController extends Controller
     {
         $categories = Category::all();
 
-        return view('admin.books.buku', [
+        return view('admin.books.edit', [
             'title' => 'Edit Buku',
             'book' => $book,
             'categories' => $categories
@@ -204,7 +207,9 @@ class BookController extends Controller
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
-            'publication_year' => 'required|digits:4|integer|min:1900|max:' . date('Y'),
+            'publication_year' => 'required|digits:4|integer|min:1990|max:' . date('Y'),
+            'stock' => 'required|integer|min:1|max:100',
+            'status' => 'required|in:available,unavailable,special',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
     }

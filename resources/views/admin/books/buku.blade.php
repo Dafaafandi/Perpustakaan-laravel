@@ -167,7 +167,7 @@
                         value="{{ old('publication_year', $book->publication_year) }}" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Update</button>
-                <a href="{{ route('buku.index') }}" class="btn btn-secondary">Batal</a>
+                <a href="{{ route('admin.books.index') }}" class="btn btn-secondary">Batal</a>
             </form>
         @elseif (isset($categories))
             <h2>Tambah Buku Baru</h2>
@@ -215,7 +215,7 @@
                         value="{{ old('publication_year') }}" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Simpan</button>
-                <a href="{{ route('buku.index') }}" class="btn btn-secondary">Batal</a>
+                <a href="{{ route('admin.books.index') }}" class="btn btn-secondary">Batal</a>
             </form>
         @else
             @if (session('success'))

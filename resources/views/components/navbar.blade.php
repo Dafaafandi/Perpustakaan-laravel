@@ -12,8 +12,9 @@
                         @if (auth()->check() && auth()->user()->hasRole('admin'))
                             <x-nav-link href="/kategori" :active="request()->is('kategori')">List Category</x-nav-link>
                             <x-nav-link href="/buku" :active="request()->is('buku')">List Book</x-nav-link>
-                            <x-nav-link href="/peminjaman" :active="request()->is('peminjaman')">List Borrowing</x-nav-link>
-                            <x-nav-link href="/daftar" :active="request()->is('daftar')">Member List</x-nav-link>
+                            <x-nav-link href="{{ route('admin.borrowing.index') }}" :active="request()->is('admin/borrowing*')">List
+                                Borrowing</x-nav-link>
+                            <x-nav-link href="/members" :active="request()->is('daftar')">Member List</x-nav-link>
                         @endif
                     </div>
                 </div>
@@ -106,8 +107,8 @@
                 @if (auth()->check() && auth()->user()->hasRole('admin'))
                     <x-nav-link href="/kategori" :active="request()->is('kategori')">List Category</x-nav-link>
                     <x-nav-link href="/buku" :active="request()->is('buku')">List Book</x-nav-link>
-                    <x-nav-link href="/peminjaman" :active="request()->is('peminjaman')">List Borrowing</x-nav-link>
-                    <x-nav-link href="/daftar" :active="request()->is('daftar')">Member List</x-nav-link>
+                    <x-nav-link href="/borrowing" :active="request()->is('peminjaman')">List Borrowing</x-nav-link>
+                    <x-nav-link href="/members" :active="request()->is('daftar')">Member List</x-nav-link>
                 @endif
             </div>
             <div class="border-t border-gray-200 pt-4 pb-3">

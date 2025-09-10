@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property string|null $image
@@ -50,5 +51,56 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the user's borrowings
+     */
+    public function borrowings(): HasMany
+    {
+        return $this->hasMany(Borrowing::class);
+    }
+
+    /**
+     * Get the user's active borrowings
+     */
+    public function activeBorrowings(): HasMany
+    {
+        return $this->hasMany(Borrowing::class)->whereIn('status', ['pending', 'approved']);
+    }
+
+    /**
+     * Get the user's overdue borrowings
+     */
+    public function overdueBorrowings(): HasMany
+    {
+        return $this->hasMany(Borrowing::class)->overdue();
+    }
+
+    /**
+     * Check if user can borrow more books
+     */
+    public function canBorrowMore(): bool
+    {
+        $maxBooks = config('library.borrowing.max_books_per_user', 3);
+        $activeBorrowings = $this->activeBorrowings()->count();
+
+        return $activeBorrowings < $maxBooks;
+    }
+
+    /**
+     * Check if user has overdue books
+     */
+    public function hasOverdueBooks(): bool
+    {
+        return $this->overdueBorrowings()->exists();
+    }
+
+    /**
+     * Get total fine amount
+     */
+    public function getTotalFine(): float
+    {
+        return $this->borrowings()->where('fine_amount', '>', 0)->sum('fine_amount');
     }
 }
