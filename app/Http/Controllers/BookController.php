@@ -79,7 +79,6 @@ class BookController extends Controller
             $validatedData['image'] = $imagePath;
         }
 
-        // Set available_stock equal to stock initially
         $validatedData['available_stock'] = $validatedData['stock'];
 
         Book::create($validatedData);
