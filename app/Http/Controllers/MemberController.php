@@ -91,7 +91,6 @@ class MemberController extends Controller
         try {
             $member = User::findOrFail($id);
 
-            // Prevent deletion of admin users
             if ($member->hasRole('admin')) {
                 if ($request->ajax()) {
                     return response()->json(['error' => 'Cannot delete admin users.'], 400);
