@@ -1,12 +1,51 @@
 <x-layout>
+    
+    @push('styles')
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <style>
+            .badge {
+                font-size: 0.875rem;
+            }
+
+            .select2-container {
+                width: 100% !important;
+            }
+
+            .text-danger {
+                color: #e74a3b !important;
+            }
+
+            .border-left-primary {
+                border-left: .25rem solid #4e73df !important;
+            }
+
+            .border-left-warning {
+                border-left: .25rem solid #f6c23e !important;
+            }
+
+            .border-left-success {
+                border-left: .25rem solid #1cc88a !important;
+            }
+
+            .border-left-danger {
+                border-left: .25rem solid #e74a3b !important;
+            }
+
+            .border-left-info {
+                border-left: .25rem solid #36b9cc !important;
+            }
+
+            .border-left-dark {
+                border-left: .25rem solid #5a5c69 !important;
+            }
+        </style>
+    @endpush
     <x-slot:title>{{ $title }}</x-slot:title>
 
     <div class="container-fluid">
-        <!-- Header -->
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
         </div>
 
-        <!-- Statistics Cards -->
         <div class="row mb-4">
             <div class="col-xl-2 col-md-4 mb-3">
                 <div class="card border-left-primary shadow h-100 py-2">
@@ -111,7 +150,6 @@
             </div>
         </div>
 
-        <!-- Filters -->
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <div class="row align-items-center">
@@ -154,7 +192,6 @@
             </div>
         </div>
 
-        <!-- Main table -->
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Daftar Peminjaman Buku</h6>
@@ -187,7 +224,6 @@
         </div>
     </div>
 
-    <!-- Approve Modal -->
     <div class="modal fade" id="approveModal" tabindex="-1" role="dialog" aria-labelledby="approveModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -213,7 +249,6 @@
         </div>
     </div>
 
-    <!-- Reject Modal -->
     <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -239,7 +274,6 @@
         </div>
     </div>
 
-    <!-- Return Modal -->
     <div class="modal fade" id="returnModal" tabindex="-1" role="dialog" aria-labelledby="returnModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -265,55 +299,12 @@
         </div>
     </div>
 
-    @push('styles')
-        <!-- Select2 CSS -->
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-        <style>
-            .badge {
-                font-size: 0.875rem;
-            }
-
-            .select2-container {
-                width: 100% !important;
-            }
-
-            .text-danger {
-                color: #e74a3b !important;
-            }
-
-            .border-left-primary {
-                border-left: .25rem solid #4e73df !important;
-            }
-
-            .border-left-warning {
-                border-left: .25rem solid #f6c23e !important;
-            }
-
-            .border-left-success {
-                border-left: .25rem solid #1cc88a !important;
-            }
-
-            .border-left-danger {
-                border-left: .25rem solid #e74a3b !important;
-            }
-
-            .border-left-info {
-                border-left: .25rem solid #36b9cc !important;
-            }
-
-            .border-left-dark {
-                border-left: .25rem solid #5a5c69 !important;
-            }
-        </style>
-    @endpush
 
     @push('scripts')
-        <!-- Select2 JS -->
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
         <script>
             $(document).ready(function() {
-                // Initialize Select2 for member search
                 $('#member-search').select2({
                     ajax: {
                         url: '{{ route('admin.borrowing.search-members') }}',
@@ -336,7 +327,6 @@
                     allowClear: true
                 });
 
-                // Initialize DataTable
                 var table = $('#borrowingTable').DataTable({
                     processing: true,
                     serverSide: true,
@@ -413,40 +403,33 @@
                     responsive: true
                 });
 
-                // Load statistics
                 loadStatistics();
 
-                // Apply filters
                 $('#apply-filters').click(function() {
                     table.draw();
                 });
 
-                // Reset filters
                 $('#reset-filters').click(function() {
                     $('#status-filter').val('');
                     $('#member-search').val(null).trigger('change');
                     table.draw();
                 });
 
-                // Approve button click
                 $(document).on('click', '.approve-btn', function() {
                     var id = $(this).data('id');
                     $('#approveModal').data('id', id).modal('show');
                 });
 
-                // Reject button click
                 $(document).on('click', '.reject-btn', function() {
                     var id = $(this).data('id');
                     $('#rejectModal').data('id', id).modal('show');
                 });
 
-                // Return button click
                 $(document).on('click', '.return-btn', function() {
                     var id = $(this).data('id');
                     $('#returnModal').data('id', id).modal('show');
                 });
 
-                // Confirm approve
                 $('#confirm-approve').click(function() {
                     var id = $('#approveModal').data('id');
                     var notes = $('#approve-notes').val();
@@ -473,7 +456,6 @@
                     });
                 });
 
-                // Confirm reject
                 $('#confirm-reject').click(function() {
                     var id = $('#rejectModal').data('id');
                     var notes = $('#reject-notes').val();
@@ -505,7 +487,6 @@
                     });
                 });
 
-                // Confirm return
                 $('#confirm-return').click(function() {
                     var id = $('#returnModal').data('id');
                     var notes = $('#return-notes').val();
@@ -532,7 +513,6 @@
                     });
                 });
 
-                // Load statistics
                 function loadStatistics() {
                     $.get('{{ route('admin.borrowing.statistics') }}', function(data) {
                         $('#stat-total').text(data.total);
