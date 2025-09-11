@@ -127,7 +127,6 @@ class BorrowingController extends Controller
             ], 400);
         }
 
-        // Check if book is still available
         if (!$borrowing->book->isAvailable()) {
             return response()->json([
                 'success' => false,
@@ -135,7 +134,6 @@ class BorrowingController extends Controller
             ], 400);
         }
 
-        // Check if user can still borrow
         if (!$borrowing->user->canBorrowMore()) {
             return response()->json([
                 'success' => false,
@@ -143,7 +141,6 @@ class BorrowingController extends Controller
             ], 400);
         }
 
-        // Check if user has overdue books
         if ($borrowing->user->hasOverdueBooks()) {
             return response()->json([
                 'success' => false,
@@ -151,7 +148,6 @@ class BorrowingController extends Controller
             ], 400);
         }
 
-        // Approve the borrowing
         $loanPeriod = config('library.borrowing.loan_period_days', 14);
         $borrowedDate = now()->toDateString();
         $dueDate = now()->addDays($loanPeriod)->toDateString();
@@ -165,7 +161,6 @@ class BorrowingController extends Controller
             'admin_notes' => $request->admin_notes
         ]);
 
-        // Reduce book stock
         $borrowing->book->reduceStock();
 
         return response()->json([
