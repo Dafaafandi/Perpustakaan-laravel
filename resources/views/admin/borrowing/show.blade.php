@@ -2,14 +2,12 @@
     <x-slot:title>{{ $title }}</x-slot:title>
 
     <div class="container-fluid">
-        <!-- Header -->
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <a href="{{ route('admin.borrowing.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
         </div>
 
-        <!-- Detail Peminjaman -->
         <div class="row">
             <div class="col-lg-8">
                 <div class="card shadow mb-4">
@@ -116,7 +114,6 @@
             </div>
 
             <div class="col-lg-4">
-                <!-- Member Info -->
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-primary">Informasi Member</h6>
@@ -164,7 +161,6 @@
                     </div>
                 </div>
 
-                <!-- Book Info -->
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-primary">Informasi Buku</h6>
@@ -209,7 +205,6 @@
             </div>
         </div>
 
-        <!-- Action Buttons -->
         @if ($borrowing->status === 'pending')
             <div class="row">
                 <div class="col-12">
@@ -243,8 +238,6 @@
         @endif
     </div>
 
-    <!-- Include the same modals from index page -->
-    <!-- Approve Modal -->
     <div class="modal fade" id="approveModal" tabindex="-1" role="dialog" aria-labelledby="approveModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -270,7 +263,6 @@
         </div>
     </div>
 
-    <!-- Reject Modal -->
     <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -296,7 +288,6 @@
         </div>
     </div>
 
-    <!-- Return Modal -->
     <div class="modal fade" id="returnModal" tabindex="-1" role="dialog" aria-labelledby="returnModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -325,25 +316,21 @@
     @push('scripts')
         <script>
             $(document).ready(function() {
-                // Approve button click
                 $('#approve-btn').click(function() {
                     var id = $(this).data('id');
                     $('#approveModal').data('id', id).modal('show');
                 });
 
-                // Reject button click
                 $('#reject-btn').click(function() {
                     var id = $(this).data('id');
                     $('#rejectModal').data('id', id).modal('show');
                 });
 
-                // Return button click
                 $('#return-btn').click(function() {
                     var id = $(this).data('id');
                     $('#returnModal').data('id', id).modal('show');
                 });
 
-                // Confirm approve
                 $('#confirm-approve').click(function() {
                     var id = $('#approveModal').data('id');
                     var notes = $('#approve-notes').val();
@@ -370,7 +357,6 @@
                     });
                 });
 
-                // Confirm reject
                 $('#confirm-reject').click(function() {
                     var id = $('#rejectModal').data('id');
                     var notes = $('#reject-notes').val();
@@ -402,7 +388,6 @@
                     });
                 });
 
-                // Confirm return
                 $('#confirm-return').click(function() {
                     var id = $('#returnModal').data('id');
                     var notes = $('#return-notes').val();
