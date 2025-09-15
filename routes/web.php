@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/welcome', function () {
+Route::get('/rofiq', function () {
     return view('welcome');
 })->name('welcome');
 
@@ -41,6 +41,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin')->group(function () {
 
         Route::resource('kategori', CategoryController::class);
+        // Route::post('/kategori/store', [CategoryController::class, 'store'])->name('kategori.store');
+        // Route::delete('/kategori/store', [CategoryController::class, 'store'])->name('kategori.store');
 
         Route::prefix('books')->name('admin.books.')->group(function () {
 

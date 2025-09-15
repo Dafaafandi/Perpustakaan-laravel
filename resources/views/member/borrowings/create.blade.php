@@ -156,12 +156,6 @@
                 </form>
             </div>
 
-            <!-- Additional Info -->
-            <div class="mt-8 text-center text-sm text-gray-600">
-                <p>Setelah mengajukan peminjaman, Anda akan menerima notifikasi ketika admin menyetujui atau menolak
-                    permintaan Anda.</p>
-                <p class="mt-1">Silakan bawa kartu identitas saat mengambil buku di perpustakaan.</p>
-            </div>
         </div>
     </div>
 

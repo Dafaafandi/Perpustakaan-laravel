@@ -116,6 +116,8 @@ class BookController extends Controller
             $imagePath = $request->file('image')->store('book-images', 'public');
             $validatedData['image'] = $imagePath;
         }
+        $book->stock = $request->stock;
+        $book->available_stock = $request->stock;
 
         $book->update($validatedData);
 

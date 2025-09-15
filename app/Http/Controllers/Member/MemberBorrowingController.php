@@ -63,6 +63,8 @@ class MemberBorrowingController extends Controller
             return redirect()->back()->with('error', 'Anda sudah meminjam buku ini.');
         }
 
+        $book->decrement('available_stock', 1);
+
         $borrowingPeriod = config('library.borrowing.default_period_days', 14);
 
         $borrowing = Borrowing::create([
@@ -97,7 +99,7 @@ class MemberBorrowingController extends Controller
     /**
      * Request return of borrowed book
      */
-    public function requestReturn(Borrowing $borrowing)
+    public function requestReturn(Borrowing $borrowing , Book $book)
     {
         if ($borrowing->user_id !== auth()->id()) {
             abort(403);
@@ -106,6 +108,8 @@ class MemberBorrowingController extends Controller
         if (!in_array($borrowing->status, ['approved', 'overdue'])) {
             return redirect()->back()->with('error', 'Buku ini tidak dalam status dipinjam.');
         }
+
+        $book->increment('available_stock', 1);
 
         $borrowing->update([
             'status' => 'returned',

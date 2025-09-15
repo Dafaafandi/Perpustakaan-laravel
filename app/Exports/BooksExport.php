@@ -10,7 +10,7 @@ class BooksExport implements FromCollection, WithHeadings, WithMapping {
         return Book::with('category')->get();
     }
     public function headings(): array {
-        return ["ID", "Judul", "Penulis", "Kategori", "Tahun Terbit"];
+        return ["ID", "Judul", "Penulis", "Kategori", "Tahun Terbit","Stock","Status","Image"];
     }
     public function map($book): array {
         return [
@@ -19,6 +19,9 @@ class BooksExport implements FromCollection, WithHeadings, WithMapping {
             $book->author,
             $book->category->name,
             $book->publication_year,
+            $book->stock,
+            $book->status,
+            $book->image,
         ];
     }
 }
