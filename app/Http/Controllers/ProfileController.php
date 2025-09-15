@@ -33,11 +33,6 @@ class ProfileController extends Controller
             $user->image = $imagePath;
         }
 
-        // Email verification disabled
-        // if ($user->isDirty('email')) {
-        //     $user->email_verified_at = null;
-        // }
-
         $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');

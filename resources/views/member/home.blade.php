@@ -13,9 +13,10 @@
             </div>
 
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <!-- Books Card -->
                 <div class="group relative">
-                    <div
-                        class="block rounded-lg bg-white shadow-md hover:shadow-lg transition-shadow duration-300 cursor-not-allowed opacity-75">
+                    <a href="{{ route('member.books.index') }}"
+                        class="block rounded-lg bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
                         <div class="p-6 text-center">
                             <div
                                 class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-green-100 mb-4">
@@ -26,16 +27,16 @@
                                     </path>
                                 </svg>
                             </div>
-                            <h3 class="text-lg font-medium text-gray-900">Buku</h3>
-                            <p class="mt-2 text-sm text-gray-500">Jelajahi koleksi buku perpustakaan</p>
+                            <h3 class="text-lg font-medium text-gray-900">Katalog Buku</h3>
+                            <p class="mt-2 text-sm text-gray-500">Jelajahi dan cari koleksi buku perpustakaan</p>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
                 <!-- My Borrowings Card -->
                 <div class="group relative">
-                    <div
-                        class="block rounded-lg bg-white shadow-md hover:shadow-lg transition-shadow duration-300 cursor-not-allowed opacity-75">
+                    <a href="{{ route('member.borrowings.index') }}"
+                        class="block rounded-lg bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
                         <div class="p-6 text-center">
                             <div
                                 class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-yellow-100 mb-4">
@@ -47,9 +48,9 @@
                                 </svg>
                             </div>
                             <h3 class="text-lg font-medium text-gray-900">Peminjaman Saya</h3>
-                            <p class="mt-2 text-sm text-gray-500">Lihat status buku yang sedang dipinjam</p>
+                            <p class="mt-2 text-sm text-gray-500">Kelola dan pantau status peminjaman buku</p>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
                 <!-- Profile Card -->

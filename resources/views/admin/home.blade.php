@@ -22,7 +22,8 @@
     @endpush
 
     <div class="bg-white">
-        <div class="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
+
             <!-- Header -->
             <div class="text-center mb-12">
                 <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">

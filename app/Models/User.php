@@ -66,7 +66,7 @@ class User extends Authenticatable
      */
     public function activeBorrowings(): HasMany
     {
-        return $this->hasMany(Borrowing::class)->whereIn('status', ['pending', 'approved']);
+        return $this->hasMany(Borrowing::class)->where('status', 'approved');
     }
 
     /**
@@ -97,10 +97,15 @@ class User extends Authenticatable
     }
 
     /**
-     * Get total fine amount
+     * Get member borrowing statistics
      */
-    public function getTotalFine(): float
+    public function getBorrowingStatistics(): array
     {
-        return $this->borrowings()->where('fine_amount', '>', 0)->sum('fine_amount');
+        return [
+            'total_borrowed' => $this->borrowings()->count(),
+            'active_borrowings' => $this->borrowings()->where('status', 'approved')->count(),
+            'overdue_books' => $this->borrowings()->where('status', 'overdue')->count(),
+            'returned_books' => $this->borrowings()->where('status', 'returned')->count()
+        ];
     }
 }

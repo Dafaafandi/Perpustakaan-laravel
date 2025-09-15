@@ -19,82 +19,121 @@ class BorrowingController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         if ($request->ajax()) {
-            $borrowings = Borrowing::with(['user', 'book.category', 'approvedBy'])
-                ->when($request->status, function ($query, $status) {
-                    return $query->where('status', $status);
-                })
-                ->latest()
-                ->get();
+            try {
+                Borrowing::where('status', 'approved')
+                    ->where('due_date', '<', now()->toDateString())
+                    ->update(['status' => 'overdue']);
 
-            return DataTables::of($borrowings)
-                ->addIndexColumn()
-                ->addColumn('member', function ($row) {
-                    return $row->user ? $row->user->name : 'N/A';
-                })
-                ->addColumn('member_email', function ($row) {
-                    return $row->user ? $row->user->email : 'N/A';
-                })
-                ->addColumn('book_title', function ($row) {
-                    return $row->book ? $row->book->title : 'N/A';
-                })
-                ->addColumn('book_author', function ($row) {
-                    return $row->book ? $row->book->author : 'N/A';
-                })
-                ->addColumn('category', function ($row) {
-                    return $row->book && $row->book->category ? $row->book->category->name : 'N/A';
-                })
-                ->addColumn('status', function ($row) {
-                    $badgeClass = match ($row->status) {
-                        'pending' => 'badge-warning',
-                        'approved' => 'badge-success',
-                        'returned' => 'badge-info',
-                        'overdue' => 'badge-danger',
-                        'rejected' => 'badge-dark',
-                        default => 'badge-secondary',
-                    };
+                $query = Borrowing::with(['user', 'book.category', 'approvedBy'])
+                    ->when($request->member_id, function ($query, $member_id) {
+                        return $query->where('user_id', $member_id);
+                    });
 
-                    $statusText = $row->status_text;
+                // Handle search
+                if ($request->has('search') && !empty($request->search['value'])) {
+                    $searchValue = $request->search['value'];
+                    $query->where(function ($q) use ($searchValue) {
+                        $q->whereHas('user', function ($q) use ($searchValue) {
+                            $q->where('name', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('email', 'LIKE', "%{$searchValue}%");
+                        })
+                            ->orWhereHas('book', function ($q) use ($searchValue) {
+                                $q->where('title', 'LIKE', "%{$searchValue}%")
+                                    ->orWhere('author', 'LIKE', "%{$searchValue}%");
+                            })
+                            ->orWhereHas('book.category', function ($q) use ($searchValue) {
+                                $q->where('name', 'LIKE', "%{$searchValue}%");
+                            });
+                    });
+                }
 
-                    if ($row->status === 'approved' && $row->isOverdue()) {
-                        $badgeClass = 'badge-danger';
-                        $statusText = 'Terlambat';
+                // Get total count before pagination
+                $totalRecords = Borrowing::count();
+                $filteredRecords = $query->count();
+
+                // Handle ordering
+                if ($request->has('order')) {
+                    $orderColumn = $request->order[0]['column'];
+                    $orderDir = $request->order[0]['dir'];
+
+                    // Define ordering based on column index
+                    switch ($orderColumn) {
+                        case 1: // Member name
+                            $query->join('users', 'borrowings.user_id', '=', 'users.id')
+                                ->orderBy('users.name', $orderDir)
+                                ->select('borrowings.*');
+                            break;
+                        case 2: // Member email
+                            $query->join('users', 'borrowings.user_id', '=', 'users.id')
+                                ->orderBy('users.email', $orderDir)
+                                ->select('borrowings.*');
+                            break;
+                        case 3: // Book title
+                            $query->join('books', 'borrowings.book_id', '=', 'books.id')
+                                ->orderBy('books.title', $orderDir)
+                                ->select('borrowings.*');
+                            break;
+                        case 4: // Book author
+                            $query->join('books', 'borrowings.book_id', '=', 'books.id')
+                                ->orderBy('books.author', $orderDir)
+                                ->select('borrowings.*');
+                            break;
+                        case 5: // Category
+                            $query->join('books', 'borrowings.book_id', '=', 'books.id')
+                                ->join('categories', 'books.category_id', '=', 'categories.id')
+                                ->orderBy('categories.name', $orderDir)
+                                ->select('borrowings.*');
+                            break;
+                        case 6: // Borrow date
+                            $query->orderBy('borrowed_date', $orderDir);
+                            break;
+                        case 7: // Due date
+                            $query->orderBy('due_date', $orderDir);
+                            break;
+                        case 8: // Return date
+                            $query->orderBy('returned_date', $orderDir);
+                            break;
+                        default:
+                            $query->latest();
                     }
+                } else {
+                    $query->latest();
+                }
 
-                    return '<span class="badge ' . $badgeClass . '">' . $statusText . '</span>';
-                })
-                ->addColumn('borrowed_date', function ($row) {
-                    return $row->borrowed_date ? $row->borrowed_date->format('d/m/Y') : '-';
-                })
-                ->addColumn('due_date', function ($row) {
-                    $dueDate = $row->due_date ? $row->due_date->format('d/m/Y') : '-';
+                // Handle pagination
+                $start = $request->input('start', 0);
+                $length = $request->input('length', 25);
 
-                    if ($row->status === 'approved' && $row->due_date && $row->isOverdue()) {
-                        $overdueDays = Carbon::parse($row->due_date)->diffInDays(now());
-                        $dueDate .= ' <span class="text-danger">(' . $overdueDays . ' hari terlambat)</span>';
-                    }
+                $borrowings = $query->skip($start)->take($length)->get();
 
-                    return $dueDate;
-                })
-                ->addColumn('returned_date', function ($row) {
-                    return $row->returned_date ? $row->returned_date->format('d/m/Y') : '-';
-                })
-                ->addColumn('fine_amount', function ($row) {
-                    if ($row->fine_amount > 0) {
-                        return 'Rp ' . number_format($row->fine_amount, 0, ',', '.');
-                    } elseif ($row->status === 'approved' && $row->isOverdue()) {
-                        $fine = $row->calculateFine();
-                        return '<span class="text-danger">Rp ' . number_format($fine, 0, ',', '.') . '</span>';
-                    }
-                    return 'Rp 0';
-                })
-                ->addColumn('approved_by', function ($row) {
-                    return $row->approvedBy ? $row->approvedBy->name : '-';
-                })
-                ->addColumn('action', function ($row) {
-                    return $this->getActionButtons($row);
-                })
-                ->rawColumns(['status', 'due_date', 'fine_amount', 'action'])
-                ->make(true);
+                \Log::info('Borrowings count: ' . $borrowings->count());
+                \Log::info('Search value: ' . ($request->search['value'] ?? 'none'));
+
+                $data = [];
+                foreach ($borrowings as $index => $b) {
+                    $data[] = [
+                        'DT_RowIndex' => $start + $index + 1,
+                        'member' => $b->user ? $b->user->name : 'N/A',
+                        'member_email' => $b->user ? $b->user->email : 'N/A',
+                        'book_title' => $b->book ? $b->book->title : 'N/A',
+                        'book_author' => $b->book ? ($b->book->author ?? 'N/A') : 'N/A',
+                        'category' => $b->book && $b->book->category ? $b->book->category->name : 'N/A',
+                        'borrow_date' => $b->borrowed_date ? Carbon::parse($b->borrowed_date)->format('d/m/Y') : '-',
+                        'due_date' => $b->due_date ? Carbon::parse($b->due_date)->format('d/m/Y') : '-',
+                        'return_date' => $b->returned_date ? Carbon::parse($b->returned_date)->format('d/m/Y') : '-'
+                    ];
+                }
+
+                return response()->json([
+                    'draw' => intval($request->input('draw', 1)),
+                    'recordsTotal' => $totalRecords,
+                    'recordsFiltered' => $filteredRecords,
+                    'data' => $data
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('DataTables error: ' . $e->getMessage());
+                return response()->json(['error' => 'Failed to load data'], 500);
+            }
         }
 
         return view('admin.borrowing.index', [
@@ -116,123 +155,28 @@ class BorrowingController extends Controller
     }
 
     /**
-     * Approve borrowing request
-     */
-    public function approve(Request $request, Borrowing $borrowing): JsonResponse
-    {
-        if ($borrowing->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hanya peminjaman dengan status pending yang bisa disetujui.'
-            ], 400);
-        }
-
-        // Check if book is still available
-        if (!$borrowing->book->isAvailable()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Buku sudah tidak tersedia.'
-            ], 400);
-        }
-
-        // Check if user can still borrow
-        if (!$borrowing->user->canBorrowMore()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Member sudah mencapai batas maksimal peminjaman.'
-            ], 400);
-        }
-
-        // Check if user has overdue books
-        if ($borrowing->user->hasOverdueBooks()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Member memiliki buku yang terlambat dikembalikan.'
-            ], 400);
-        }
-
-        // Approve the borrowing
-        $loanPeriod = config('library.borrowing.loan_period_days', 14);
-        $borrowedDate = now()->toDateString();
-        $dueDate = now()->addDays($loanPeriod)->toDateString();
-
-        $borrowing->update([
-            'status' => 'approved',
-            'borrowed_date' => $borrowedDate,
-            'due_date' => $dueDate,
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
-            'admin_notes' => $request->admin_notes
-        ]);
-
-        // Reduce book stock
-        $borrowing->book->reduceStock();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Peminjaman berhasil disetujui.'
-        ]);
-    }
-
-    /**
-     * Reject borrowing request
-     */
-    public function reject(Request $request, Borrowing $borrowing): JsonResponse
-    {
-        if ($borrowing->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hanya peminjaman dengan status pending yang bisa ditolak.'
-            ], 400);
-        }
-
-        $borrowing->update([
-            'status' => 'rejected',
-            'admin_notes' => $request->admin_notes,
-            'approved_by' => auth()->id(),
-            'approved_at' => now()
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Peminjaman berhasil ditolak.'
-        ]);
-    }
-
-    /**
      * Mark borrowing as returned
      */
     public function return(Request $request, Borrowing $borrowing): JsonResponse
     {
-        if ($borrowing->status !== 'approved') {
+        if (!in_array($borrowing->status, ['approved', 'overdue'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Hanya peminjaman yang sedang dipinjam yang bisa dikembalikan.'
+                'message' => 'Hanya peminjaman yang sedang dipinjam atau terlambat yang bisa dikembalikan.'
             ], 400);
         }
 
-        $fine = 0;
         $returnedDate = now()->toDateString();
-
-        // Calculate fine if overdue
-        if ($borrowing->isOverdue()) {
-            $fine = $borrowing->calculateFine();
-        }
 
         $borrowing->update([
             'status' => 'returned',
             'returned_date' => $returnedDate,
-            'fine_amount' => $fine,
             'admin_notes' => $request->admin_notes
         ]);
 
-        // Increase book stock
-        $borrowing->book->increaseStock();
-
         return response()->json([
             'success' => true,
-            'message' => 'Buku berhasil dikembalikan.' . ($fine > 0 ? ' Denda: Rp ' . number_format($fine, 0, ',', '.') : ''),
-            'fine' => $fine
+            'message' => 'Buku berhasil dikembalikan.'
         ]);
     }
 
@@ -263,72 +207,25 @@ class BorrowingController extends Controller
                 'email' => $member->email,
                 'can_borrow' => $member->canBorrowMore(),
                 'has_overdue' => $member->hasOverdueBooks(),
-                'active_borrowings' => $member->activeBorrowings()->count(),
-                'total_fine' => $member->getTotalFine()
+                'active_borrowings' => $member->activeBorrowings()->count()
             ];
         }));
     }
 
     /**
-     * Get action buttons for DataTables
-     */
-    private function getActionButtons(Borrowing $borrowing): string
-    {
-        $buttons = '<div class="btn-group" role="group">';
-
-        // View button
-        $buttons .= '<a href="' . route('admin.borrowing.show', $borrowing) . '"
-                       class="btn btn-sm btn-info" title="Detail">
-                       <i class="fas fa-eye"></i>
-                     </a>';
-
-        if ($borrowing->status === 'pending') {
-            // Approve button
-            $buttons .= '<button type="button"
-                           class="btn btn-sm btn-success approve-btn"
-                           data-id="' . $borrowing->id . '"
-                           title="Setujui">
-                           <i class="fas fa-check"></i>
-                         </button>';
-
-            // Reject button
-            $buttons .= '<button type="button"
-                           class="btn btn-sm btn-danger reject-btn"
-                           data-id="' . $borrowing->id . '"
-                           title="Tolak">
-                           <i class="fas fa-times"></i>
-                         </button>';
-        } elseif ($borrowing->status === 'approved') {
-            // Return button
-            $buttons .= '<button type="button"
-                           class="btn btn-sm btn-primary return-btn"
-                           data-id="' . $borrowing->id . '"
-                           title="Kembalikan">
-                           <i class="fas fa-undo"></i>
-                         </button>';
-        }
-
-        $buttons .= '</div>';
-
-        return $buttons;
-    }
-
-    /**
-     * Get borrowing statistics
+     * Get borrowing statistics (updated for simplified status system)
      */
     public function statistics(): JsonResponse
     {
+        Borrowing::where('status', 'approved')
+            ->where('due_date', '<', now()->toDateString())
+            ->update(['status' => 'overdue']);
+
         $stats = [
             'total' => Borrowing::count(),
-            'pending' => Borrowing::where('status', 'pending')->count(),
-            'approved' => Borrowing::where('status', 'approved')->count(),
-            'returned' => Borrowing::where('status', 'returned')->count(),
-            'overdue' => Borrowing::where('status', 'overdue')
-                ->orWhere(function ($q) {
-                    $q->where('status', 'approved')
-                        ->where('due_date', '<', now()->toDateString());
-                })->count(),
-            'rejected' => Borrowing::where('status', 'rejected')->count(),
+            'dipinjam' => Borrowing::where('status', 'approved')->count(),
+            'dikembalikan' => Borrowing::where('status', 'returned')->count(),
+            'terlambat' => Borrowing::where('status', 'overdue')->count(),
         ];
 
         return response()->json($stats);

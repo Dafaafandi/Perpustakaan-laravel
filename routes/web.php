@@ -48,15 +48,16 @@ Route::middleware('auth')->group(function () {
             Route::get('create', [BookController::class, 'create'])->name('create');
             Route::post('/', [BookController::class, 'store'])->name('store');
 
-            Route::get('{book}', [BookController::class, 'show'])->name('show');
-            Route::get('{book}/edit', [BookController::class, 'edit'])->name('edit');
-            Route::put('{book}', [BookController::class, 'update'])->name('update');
-            Route::delete('{book}', [BookController::class, 'destroy'])->name('destroy');
-
             Route::get('export/excel', [BookController::class, 'exportExcel'])->name('export.excel');
             Route::get('export/pdf', [BookController::class, 'exportPdf'])->name('export.pdf');
             Route::get('template/download', [BookController::class, 'downloadTemplate'])->name('template.download');
             Route::post('import/excel', [BookController::class, 'importExcel'])->name('import.excel');
+
+            Route::get('show/{book}', [BookController::class, 'show'])->name('show')->where('book', '[0-9]+');
+
+            Route::get('{book}/edit', [BookController::class, 'edit'])->name('edit')->where('book', '[0-9]+');
+            Route::put('{book}', [BookController::class, 'update'])->name('update')->where('book', '[0-9]+');
+            Route::delete('{book}', [BookController::class, 'destroy'])->name('destroy')->where('book', '[0-9]+');
         });
 
         Route::get('/buku', [BookController::class, 'index'])->name('buku.index');
@@ -66,17 +67,30 @@ Route::middleware('auth')->group(function () {
             Route::get('search/members', [BorrowingController::class, 'searchMembers'])->name('search-members');
             Route::get('api/statistics', [BorrowingController::class, 'statistics'])->name('statistics');
             Route::get('{borrowing}', [BorrowingController::class, 'show'])->name('show');
-            Route::post('{borrowing}/approve', [BorrowingController::class, 'approve'])->name('approve');
-            Route::post('{borrowing}/reject', [BorrowingController::class, 'reject'])->name('reject');
             Route::post('{borrowing}/return', [BorrowingController::class, 'return'])->name('return');
         });
-
-        // Route::get('/peminjaman', [BorrowingController::class, 'index'])->name('peminjaman');
 
         Route::prefix('members')->name('admin.members.')->group(function () {
             Route::get('/', [MemberController::class, 'index'])->name('index');
             Route::get('{id}', [MemberController::class, 'show'])->name('show');
             Route::delete('{id}', [MemberController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    Route::middleware('role:member')->group(function () {
+
+        Route::prefix('books')->name('member.books.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Member\MemberBookController::class, 'index'])->name('index');
+            Route::get('/search', [\App\Http\Controllers\Member\MemberBookController::class, 'search'])->name('search');
+            Route::get('/{book}', [\App\Http\Controllers\Member\MemberBookController::class, 'show'])->name('show');
+        });
+
+        Route::prefix('borrowings')->name('member.borrowings.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Member\MemberBorrowingController::class, 'index'])->name('index');
+            Route::get('/create/{book}', [\App\Http\Controllers\Member\MemberBorrowingController::class, 'create'])->name('create');
+            Route::post('/store/{book}', [\App\Http\Controllers\Member\MemberBorrowingController::class, 'store'])->name('store');
+            Route::get('/{borrowing}', [\App\Http\Controllers\Member\MemberBorrowingController::class, 'show'])->name('show');
+            Route::post('/{borrowing}/request-return', [\App\Http\Controllers\Member\MemberBorrowingController::class, 'requestReturn'])->name('request-return');
         });
     });
 });

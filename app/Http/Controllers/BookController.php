@@ -79,13 +79,12 @@ class BookController extends Controller
             $validatedData['image'] = $imagePath;
         }
 
-        // Set available_stock equal to stock initially
         $validatedData['available_stock'] = $validatedData['stock'];
 
         Book::create($validatedData);
 
         return redirect()
-            ->route('admin.books.index')
+            ->route('buku.index')
             ->with('success', 'Buku berhasil ditambahkan.');
     }
 
@@ -121,7 +120,7 @@ class BookController extends Controller
         $book->update($validatedData);
 
         return redirect()
-            ->route('admin.books.index')
+            ->route('buku.index')
             ->with('success', 'Buku berhasil diperbarui.');
     }
 
@@ -136,7 +135,6 @@ class BookController extends Controller
 
         $book->delete();
 
-        // Check if request is Ajax
         if (request()->ajax()) {
             return response()->json([
                 'success' => true,
@@ -145,7 +143,7 @@ class BookController extends Controller
         }
 
         return redirect()
-            ->route('admin.books.index')
+            ->route('buku.index')
             ->with('success', 'Buku berhasil dihapus.');
     }
 
@@ -189,11 +187,11 @@ class BookController extends Controller
             Excel::import(new BooksImport, $request->file('file'));
 
             return redirect()
-                ->route('admin.books.index')
+                ->route('buku.index')
                 ->with('success', 'Data buku berhasil diimpor.');
         } catch (\Exception $e) {
             return redirect()
-                ->route('admin.books.index')
+                ->route('buku.index')
                 ->with('error', 'Gagal mengimpor data: ' . $e->getMessage());
         }
     }
@@ -208,8 +206,8 @@ class BookController extends Controller
             'author' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'publication_year' => 'required|digits:4|integer|min:1990|max:' . date('Y'),
-            'stock' => 'required|integer|min:1|max:100',
-            'status' => 'required|in:available,unavailable,special',
+            'stock' => 'required|integer|min:1|max:1000',
+            'status' => 'required|in:available,unavailable',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
     }

@@ -11,6 +11,11 @@ class Borrowing extends Model
 {
     use HasFactory;
 
+    // Status constants for the simplified status system
+    const STATUS_APPROVED = 'approved';
+    const STATUS_RETURNED = 'returned';
+    const STATUS_OVERDUE = 'overdue';
+
     protected $fillable = [
         'user_id',
         'book_id',
@@ -18,7 +23,6 @@ class Borrowing extends Model
         'borrowed_date',
         'due_date',
         'returned_date',
-        'fine_amount',
         'notes',
         'admin_notes',
         'approved_by',
@@ -30,7 +34,6 @@ class Borrowing extends Model
         'due_date' => 'date',
         'returned_date' => 'date',
         'approved_at' => 'datetime',
-        'fine_amount' => 'decimal:2',
     ];
 
     /**
@@ -55,14 +58,6 @@ class Borrowing extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
-    }
-
-    /**
-     * Scope for pending borrowings
-     */
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending');
     }
 
     /**
@@ -98,31 +93,14 @@ class Borrowing extends Model
     }
 
     /**
-     * Calculate fine amount
-     */
-    public function calculateFine(): float
-    {
-        if (!$this->isOverdue()) {
-            return 0;
-        }
-
-        $overdueDays = Carbon::parse($this->due_date)->diffInDays(now());
-        $finePerDay = config('library.borrowing.fine_per_day', 1000);
-
-        return $overdueDays * $finePerDay;
-    }
-
-    /**
      * Get status badge color
      */
     public function getStatusBadgeAttribute(): string
     {
         return match ($this->status) {
-            'pending' => 'warning',
             'approved' => 'success',
             'returned' => 'info',
             'overdue' => 'danger',
-            'rejected' => 'dark',
             default => 'secondary',
         };
     }
@@ -133,11 +111,9 @@ class Borrowing extends Model
     public function getStatusTextAttribute(): string
     {
         return match ($this->status) {
-            'pending' => 'Menunggu Persetujuan',
             'approved' => 'Dipinjam',
             'returned' => 'Dikembalikan',
             'overdue' => 'Terlambat',
-            'rejected' => 'Ditolak',
             default => ucfirst($this->status),
         };
     }

@@ -107,7 +107,6 @@ class CategoryController extends Controller
     private function getActionButtons($category): string
     {
         return '
-            <div class="btn-group" role="group">
                 <button type="button" class="btn btn-sm btn-primary editCategory"
                         data-id="' . $category->id . '"
                         data-toggle="tooltip"

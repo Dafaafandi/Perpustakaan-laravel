@@ -77,9 +77,13 @@ class MemberController extends Controller
     {
         $member = User::findOrFail($id);
 
+        // Get member statistics using the model method
+        $statistics = $member->getBorrowingStatistics();
+
         return view('admin.members.show', [
             'title' => 'Member Detail',
-            'member' => $member
+            'member' => $member,
+            'statistics' => $statistics
         ]);
     }
 
@@ -91,7 +95,6 @@ class MemberController extends Controller
         try {
             $member = User::findOrFail($id);
 
-            // Prevent deletion of admin users
             if ($member->hasRole('admin')) {
                 if ($request->ajax()) {
                     return response()->json(['error' => 'Cannot delete admin users.'], 400);

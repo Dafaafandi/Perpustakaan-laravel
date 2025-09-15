@@ -66,11 +66,13 @@ return [
     */
 
     'borrowing' => [
-        'max_books_per_user' => 3,
-        'loan_period_days' => 14,
+        'max_books_per_user' => -1,
+        'default_period_days' => 14,
         'renewal_allowed' => true,
         'max_renewals' => 2,
-        'fine_per_day' => 1000, // Rupiah
+        'fine_per_day' => false,
+        'auto_approve' => true,
+        'bypass_stock' => true,
     ],
 
     /*

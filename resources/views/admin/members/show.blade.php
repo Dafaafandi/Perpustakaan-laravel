@@ -50,20 +50,92 @@
                     <div class="card-body">
                         <div class="text-center mb-4">
                             <h6 class="text-muted mb-2">Books Borrowed</h6>
-                            <h2 class="text-primary mb-1">0</h2>
+                            <h2 class="text-primary mb-1">{{ $statistics['total_borrowed'] }}</h2>
                             <small class="text-muted">Total books</small>
                         </div>
                         <hr>
                         <div class="row text-center">
                             <div class="col-6">
                                 <h6 class="text-muted mb-2">Active</h6>
-                                <h3 class="text-success mb-0">0</h3>
+                                <h3 class="text-success mb-0">{{ $statistics['active_borrowings'] }}</h3>
                             </div>
                             <div class="col-6">
                                 <h6 class="text-muted mb-2">Returned</h6>
-                                <h3 class="text-info mb-0">0</h3>
+                                <h3 class="text-info mb-0">{{ $statistics['returned_books'] }}</h3>
                             </div>
                         </div>
+                        @if ($statistics['overdue_books'] > 0)
+                            <hr>
+                            <div class="text-center">
+                                <h6 class="text-muted mb-2">Overdue</h6>
+                                <h3 class="text-danger mb-0">{{ $statistics['overdue_books'] }}</h3>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Borrowing History -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recent Borrowing History</h5>
+                    </div>
+                    <div class="card-body">
+                        @if ($member->borrowings()->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Book Title</th>
+                                            <th>Author</th>
+                                            <th>Borrowed Date</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Return Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($member->borrowings()->with('book')->latest()->take(10)->get() as $borrowing)
+                                            <tr>
+                                                <td>{{ $borrowing->book->title ?? 'N/A' }}</td>
+                                                <td>{{ $borrowing->book->author ?? 'N/A' }}</td>
+                                                <td>{{ $borrowing->borrowed_date ? \Carbon\Carbon::parse($borrowing->borrowed_date)->format('d/m/Y') : '-' }}
+                                                </td>
+                                                <td>{{ $borrowing->due_date ? \Carbon\Carbon::parse($borrowing->due_date)->format('d/m/Y') : '-' }}
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        class="badge
+                                                    @if ($borrowing->status == 'approved') bg-success
+                                                    @elseif($borrowing->status == 'returned') bg-info
+                                                    @elseif($borrowing->status == 'overdue') bg-danger
+                                                    @else bg-secondary @endif">
+                                                        {{ ucfirst($borrowing->status) }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ $borrowing->returned_date ? \Carbon\Carbon::parse($borrowing->returned_date)->format('d/m/Y') : '-' }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="{{ route('admin.borrowing.index') }}?member_id={{ $member->id }}"
+                                    class="btn btn-outline-primary">
+                                    View All Borrowings
+                                </a>
+                            </div>
+                        @else
+                            <div class="text-center py-4">
+                                <i class="bi bi-book" style="font-size: 3rem; color: #dee2e6;"></i>
+                                <h6 class="text-muted mt-2">No borrowing history found</h6>
+                                <p class="text-muted mb-0">This member hasn't borrowed any books yet.</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

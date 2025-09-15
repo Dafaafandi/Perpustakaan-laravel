@@ -210,24 +210,7 @@
         </div>
 
         <!-- Action Buttons -->
-        @if ($borrowing->status === 'pending')
-            <div class="row">
-                <div class="col-12">
-                    <div class="card shadow">
-                        <div class="card-body text-center">
-                            <button type="button" class="btn btn-success btn-lg mr-2" id="approve-btn"
-                                data-id="{{ $borrowing->id }}">
-                                <i class="fas fa-check"></i> Setujui Peminjaman
-                            </button>
-                            <button type="button" class="btn btn-danger btn-lg" id="reject-btn"
-                                data-id="{{ $borrowing->id }}">
-                                <i class="fas fa-times"></i> Tolak Peminjaman
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @elseif($borrowing->status === 'approved')
+        @if (in_array($borrowing->status, ['approved', 'overdue']))
             <div class="row">
                 <div class="col-12">
                     <div class="card shadow">

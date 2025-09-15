@@ -43,7 +43,7 @@ class Book extends Model
      */
     public function activeBorrowings(): HasMany
     {
-        return $this->hasMany(Borrowing::class)->whereIn('status', ['pending', 'approved']);
+        return $this->hasMany(Borrowing::class)->whereIn('status', ['approved', 'overdue']);
     }
 
     /**

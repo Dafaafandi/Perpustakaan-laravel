@@ -28,6 +28,7 @@
                     <h4 class="modal-title" id="modelHeading"></h4>
                 </div>
                 <div class="modal-body">
+
                     <form id="categoryForm" name="categoryForm" class="form-horizontal">
                         <input type="hidden" name="category_id" id="category_id">
                         <div class="form-group">
