@@ -1,53 +1,10 @@
 <x-layout>
-
-    @push('styles')
-        <style>
-            .badge {
-                font-size: 0.875rem;
-            }
-
-            .select2-container {
-                width: 100% !important;
-            }
-
-            .text-danger {
-                color: #e74a3b !important;
-            }
-
-            .border-left-primary {
-                border-left: .25rem solid #4e73df !important;
-            }
-
-            .border-left-warning {
-                border-left: .25rem solid #f6c23e !important;
-            }
-
-            .border-left-success {
-                border-left: .25rem solid #1cc88a !important;
-            }
-
-            .border-left-danger {
-                border-left: .25rem solid #e74a3b !important;
-            }
-
-            .border-left-info {
-                border-left: .25rem solid #36b9cc !important;
-            }
-
-            .border-left-dark {
-                border-left: .25rem solid #5a5c69 !important;
-            }
-        </style>
-    @endpush
-
     <x-slot:title>{{ $title }}</x-slot:title>
 
     <div class="container-fluid">
-        <!-- Header -->
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
         </div>
 
-        <!-- Statistics Cards -->
         <div class="row mb-4">
             <div class="col-xl-3 col-md-6 mb-3">
                 <div class="card border-left-primary shadow h-100 py-2">
@@ -118,7 +75,6 @@
             </div>
         </div>
 
-        <!-- Filters -->
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <div class="row align-items-center">
@@ -150,7 +106,6 @@
             </div>
         </div>
 
-        <!-- Main table -->
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Daftar Peminjaman Buku</h6>
@@ -179,28 +134,132 @@
         </div>
     </div>
 
+    <!-- Approve Modal -->
+    <div class="modal fade" id="approveModal" tabindex="-1" role="dialog" aria-labelledby="approveModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="approveModalLabel">Setujui Peminjaman</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Apakah Anda yakin ingin menyetujui peminjaman ini?</p>
+                    <div class="form-group">
+                        <label for="approve-notes">Catatan Admin (Opsional):</label>
+                        <textarea class="form-control" id="approve-notes" rows="3" placeholder="Masukkan catatan..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-success" id="confirm-approve">Ya, Setujui</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectModalLabel">Tolak Peminjaman</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Apakah Anda yakin ingin menolak peminjaman ini?</p>
+                    <div class="form-group">
+                        <label for="reject-notes">Alasan Penolakan:</label>
+                        <textarea class="form-control" id="reject-notes" rows="3" placeholder="Masukkan alasan penolakan..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-danger" id="confirm-reject">Ya, Tolak</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return Modal -->
+    <div class="modal fade" id="returnModal" tabindex="-1" role="dialog" aria-labelledby="returnModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="returnModalLabel">Kembalikan Buku</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Konfirmasi pengembalian buku ini?</p>
+                    <div class="form-group">
+                        <label for="return-notes">Catatan (Opsional):</label>
+                        <textarea class="form-control" id="return-notes" rows="3" placeholder="Kondisi buku, denda, dll..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" id="confirm-return">Ya, Kembalikan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('styles')
+        <!-- Select2 CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <style>
+            .badge {
+                font-size: 0.875rem;
+            }
+
+            .select2-container {
+                width: 100% !important;
+            }
+
+            .text-danger {
+                color: #e74a3b !important;
+            }
+
+            .border-left-primary {
+                border-left: .25rem solid #4e73df !important;
+            }
+
+            .border-left-warning {
+                border-left: .25rem solid #f6c23e !important;
+            }
+
+            .border-left-success {
+                border-left: .25rem solid #1cc88a !important;
+            }
+
+            .border-left-danger {
+                border-left: .25rem solid #e74a3b !important;
+            }
+
+            .border-left-info {
+                border-left: .25rem solid #36b9cc !important;
+            }
+
+            .border-left-dark {
+                border-left: .25rem solid #5a5c69 !important;
+            }
+        </style>
+    @endpush
+
     @push('scripts')
+        <!-- Select2 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
         <script>
             $(document).ready(function() {
-                console.log('Document ready - jQuery version:', $.fn.jquery);
-                console.log('DataTables version:', $.fn.DataTable ? $.fn.DataTable.version : 'Not available');
-
-                // Global error handler untuk menangkap JavaScript errors
-                window.onerror = function(message, source, lineno, colno, error) {
-                    console.error('Global JavaScript Error:', {
-                        message: message,
-                        source: source,
-                        line: lineno,
-                        column: colno,
-                        error: error
-                    });
-                    return false;
-                };
-
-                // Validation
-                console.log('Table DOM element exists:', document.getElementById('borrowingTable') !== null);
-                console.log('DataTables constructor available:', typeof $.fn.DataTable !== 'undefined');
-
                 // Initialize Select2 for member search
                 $('#member-search').select2({
                     ajax: {
@@ -225,9 +284,7 @@
                     allowClear: true
                 });
 
-                // Kembali ke server-side processing yang sudah diperbaiki
-                console.log('Initializing server-side DataTable...');
-
+                // Initialize DataTable
                 var table = $('#borrowingTable').DataTable({
                     processing: true,
                     serverSide: true,
@@ -324,7 +381,6 @@
                 console.log('DataTable initialization complete');
                 console.log('Table DOM element exists:', $('#borrowingTable').length > 0);
 
-                // Load statistics
                 loadStatistics();
 
                 // Add search event listener for debugging
@@ -332,20 +388,121 @@
                     console.log('Search input changed to:', this.value);
                 });
 
-                // Apply filters
                 $('#apply-filters').click(function() {
                     console.log('Apply filters clicked');
                     table.draw();
                 });
 
-                // Reset filters
                 $('#reset-filters').click(function() {
                     console.log('Reset filters clicked');
                     $('#member-search').val(null).trigger('change');
                     table.draw();
                 });
 
-                // Load statistics
+                // Approve button click
+                $(document).on('click', '.approve-btn', function() {
+                    var id = $(this).data('id');
+                    $('#approveModal').data('id', id).modal('show');
+                });
+
+                // Reject button click
+                $(document).on('click', '.reject-btn', function() {
+                    var id = $(this).data('id');
+                    $('#rejectModal').data('id', id).modal('show');
+                });
+
+                // Return button click
+                $(document).on('click', '.return-btn', function() {
+                    var id = $(this).data('id');
+                    $('#returnModal').data('id', id).modal('show');
+                });
+
+                // Confirm approve
+                $('#confirm-approve').click(function() {
+                    var id = $('#approveModal').data('id');
+                    var notes = $('#approve-notes').val();
+
+                    $.ajax({
+                        url: '/admin/borrowing/' + id + '/approve',
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            admin_notes: notes
+                        },
+                        success: function(response) {
+                            $('#approveModal').modal('hide');
+                            if (response.success) {
+                                Swal.fire('Berhasil!', response.message, 'success');
+                                table.draw();
+                                loadStatistics();
+                            }
+                        },
+                        error: function(xhr) {
+                            var response = JSON.parse(xhr.responseText);
+                            Swal.fire('Error!', response.message, 'error');
+                        }
+                    });
+                });
+
+                // Confirm reject
+                $('#confirm-reject').click(function() {
+                    var id = $('#rejectModal').data('id');
+                    var notes = $('#reject-notes').val();
+
+                    if (!notes) {
+                        Swal.fire('Error!', 'Alasan penolakan harus diisi.', 'error');
+                        return;
+                    }
+
+                    $.ajax({
+                        url: '/admin/borrowing/' + id + '/reject',
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            admin_notes: notes
+                        },
+                        success: function(response) {
+                            $('#rejectModal').modal('hide');
+                            if (response.success) {
+                                Swal.fire('Berhasil!', response.message, 'success');
+                                table.draw();
+                                loadStatistics();
+                            }
+                        },
+                        error: function(xhr) {
+                            var response = JSON.parse(xhr.responseText);
+                            Swal.fire('Error!', response.message, 'error');
+                        }
+                    });
+                });
+
+                // Confirm return
+                $('#confirm-return').click(function() {
+                    var id = $('#returnModal').data('id');
+                    var notes = $('#return-notes').val();
+
+                    $.ajax({
+                        url: '/admin/borrowing/' + id + '/return',
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            admin_notes: notes
+                        },
+                        success: function(response) {
+                            $('#returnModal').modal('hide');
+                            if (response.success) {
+                                Swal.fire('Berhasil!', response.message, 'success');
+                                table.draw();
+                                loadStatistics();
+                            }
+                        },
+                        error: function(xhr) {
+                            var response = JSON.parse(xhr.responseText);
+                            Swal.fire('Error!', response.message, 'error');
+                        }
+                    });
+                });
+
                 function loadStatistics() {
                     $.get('{{ route('admin.borrowing.statistics') }}', function(data) {
                         $('#stat-total').text(data.total);

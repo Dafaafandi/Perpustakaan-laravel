@@ -155,6 +155,90 @@ class BorrowingController extends Controller
     }
 
     /**
+     * Approve borrowing request
+     */
+    public function approve(Request $request, Borrowing $borrowing): JsonResponse
+    {
+        if ($borrowing->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya peminjaman dengan status pending yang bisa disetujui.'
+            ], 400);
+        }
+
+        // Check if book is still available
+        if (!$borrowing->book->isAvailable()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Buku sudah tidak tersedia.'
+            ], 400);
+        }
+
+        // Check if user can still borrow
+        if (!$borrowing->user->canBorrowMore()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member sudah mencapai batas maksimal peminjaman.'
+            ], 400);
+        }
+
+        // Check if user has overdue books
+        if ($borrowing->user->hasOverdueBooks()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member memiliki buku yang terlambat dikembalikan.'
+            ], 400);
+        }
+
+        // Approve the borrowing
+        $loanPeriod = config('library.borrowing.loan_period_days', 14);
+        $borrowedDate = now()->toDateString();
+        $dueDate = now()->addDays($loanPeriod)->toDateString();
+
+        $borrowing->update([
+            'status' => 'approved',
+            'borrowed_date' => $borrowedDate,
+            'due_date' => $dueDate,
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+            'admin_notes' => $request->admin_notes
+        ]);
+
+        // Reduce book stock
+        $borrowing->book->reduceStock();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Peminjaman berhasil disetujui.'
+        ]);
+    }
+
+    /**
+     * Reject borrowing request
+     */
+    public function reject(Request $request, Borrowing $borrowing): JsonResponse
+    {
+        if ($borrowing->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya peminjaman dengan status pending yang bisa ditolak.'
+            ], 400);
+        }
+
+        $borrowing->update([
+            'status' => 'rejected',
+            'admin_notes' => $request->admin_notes,
+            'approved_by' => auth()->id(),
+            'approved_at' => now()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Peminjaman berhasil ditolak.'
+        ]);
+    }
+
+    /**
      * Mark borrowing as returned
      */
     public function return(Request $request, Borrowing $borrowing): JsonResponse
